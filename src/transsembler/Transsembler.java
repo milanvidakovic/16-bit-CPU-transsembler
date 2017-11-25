@@ -76,7 +76,7 @@ public class Transsembler {
 				
 				for (String l : fun.localLabels.keySet()) {
 					out.println(l + ": ");
-					out.println("#str " + fun.localLabels.get(l));
+					out.println("#str16 " + fun.localLabels.get(l));
 				}
 				
 				if (fun.fName.equals("_main"))
@@ -95,8 +95,8 @@ public class Transsembler {
 			
 			for (GlobalVar g : globalVars.values()) {
 				out.println(g.gName + ":");
-				if (g.value.startsWith("\"")) {
-					out.println("#str " + g.value);
+				if (g.type == GlobalVar.S_TYPE) {
+					out.println("#str16 " + g.value);
 				} else {
 					out.println("#d16 " + g.value);
 				}
@@ -187,6 +187,7 @@ public class Transsembler {
 									"DATA_SEGMENT_CONSTS: Could not extract global string value: " + currentLine);
 						}
 						var.value = "\"" + lValue + "\\0\"";
+						var.type = GlobalVar.S_TYPE;
 						break;
 					}
 					// found a literal in the DATA_SEGMENT
@@ -205,10 +206,12 @@ public class Transsembler {
 									"DATA_SEGMENT_CONSTS: Could not extract global label: " + currentLine);
 						}
 						var.value = v;
+						var.type = GlobalVar.S_TYPE;
 						globalLabels.put(var.value, var);
-					} else if (vValue.endsWith("H")) {
+					} else if (!vValue.contains("'")) {
 						// _globalna_promenljiva DD 02H
 						var.value = extractHex(vValue);
+						var.type = GlobalVar.N_TYPE;
 					} else {
 						throw new RuntimeException(
 								"DATA_SEGMENT_CONSTS: Unknown global var value type: " + currentLine);
@@ -597,7 +600,7 @@ public class Transsembler {
 					Pattern p = Pattern.compile("\\s*mov\\sDWORD\\sPTR\\s(-\\d|\\d)\\+\\[ebp\\],\\seax");
 					Matcher m = p.matcher(currentLine);
 					m.find();
-					int num = Integer.parseInt(m.group(1));
+//					int num = Integer.parseInt(m.group(1));
 					f.code += "push a\n";
 //					if (num > 0) 
 //						f.code += "st a, [b+" + (num / 4) + "]\n";
@@ -607,7 +610,7 @@ public class Transsembler {
 					Pattern p = Pattern.compile("\\s*mov\\sBYTE\\sPTR\\s(-\\d|\\d)\\+\\[ebp\\],\\sal");
 					Matcher m = p.matcher(currentLine);
 					m.find();
-					int num = Integer.parseInt(m.group(1));
+//					int num = Integer.parseInt(m.group(1));
 					f.code += "push a\n";
 //					if (num > 0) 
 //						f.code += "st a, [b+" + (num / 4) + "]\n";
@@ -617,7 +620,7 @@ public class Transsembler {
 					Pattern p = Pattern.compile("\\s*mov\\seax,\\sDWORD\\sPTR\\s(-\\d|\\d)\\+\\[ebp\\]");
 					Matcher m = p.matcher(currentLine);
 					m.find();
-					int num = Integer.parseInt(m.group(1));
+//					int num = Integer.parseInt(m.group(1));
 					f.code += "pop a\n";
 //					if (num > 0) 
 //						f.code += "ld a, [b+" + (num / 4) + "]\n";
@@ -627,7 +630,7 @@ public class Transsembler {
 					Pattern p = Pattern.compile("\\s*movsx\\seax,\\sBYTE\\sPTR\\s(-\\d|\\d)\\+\\[ebp\\]");
 					Matcher m = p.matcher(currentLine);
 					m.find();
-					int num = Integer.parseInt(m.group(1));
+//					int num = Integer.parseInt(m.group(1));
 					f.code += "pop a\n";
 //					if (num > 0) 
 //						f.code += "ld a, [b+" + (num / 4) + "]\n";
